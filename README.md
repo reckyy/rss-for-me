@@ -1,3 +1,8 @@
+## About this fork
+
+これは [Team Blog Hub](https://github.com/catnose99/team-blog-hub) をベースに、自分用のRSSリーダーとしてカスタマイズしたものです。  
+ZennやQiitaの記事を表示するように変更しています。
+
 # Team Blog Hub
 
 ![Demo](https://user-images.githubusercontent.com/34590683/96832331-8c289400-1479-11eb-9466-f24d30860a24.png)
