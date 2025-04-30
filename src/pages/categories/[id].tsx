@@ -2,23 +2,23 @@ import { NextPage, GetStaticProps, GetStaticPaths } from "next";
 import { FaTwitter, FaGithub } from "react-icons/fa";
 import { AiOutlineLink } from "react-icons/ai";
 
-import { members } from "@members";
-import { PostItem, Member } from "@src/types";
+import { categories } from "@categories";
+import { PostItem, Category } from "@src/types";
 import { PostList } from "@src/components/PostList";
 import { ContentWrapper } from "@src/components/ContentWrapper";
 import { PageSEO } from "@src/components/PageSEO";
 import {
-  getMemberById,
-  getMemberPostsById,
-  getMemberPath,
+  getCategoryById,
+  getCategoryPostsById,
+  getCategoryPath,
 } from "@src/utils/helper";
 
 type Props = {
   postItems: PostItem[];
-  member: Member;
+  category: Category;
 };
 
-const Page: NextPage<Props> = (props) => {
+const Page: NextPage<Props> = ({ postItems, category }) => {
   const {
     id,
     name,
@@ -27,33 +27,35 @@ const Page: NextPage<Props> = (props) => {
     twitterUsername,
     githubUsername,
     websiteUrl,
-  } = props.member;
+  } = category;
 
   return (
     <>
-      <PageSEO title={name} path={getMemberPath(id)} />
-      <section className="member">
+      <PageSEO title={name} path={getCategoryPath(id)} />
+      <section className="category">
         <ContentWrapper>
-          <header className="member-header">
-            <div className="member-header__avatar">
-              <img
-                src={avatarSrc}
-                alt={name}
-                width={100}
-                height={100}
-                className="member-header__avatar-img"
-              />
-            </div>
-            <h1 className="member-header__name">{name}</h1>
-            <p className="member-header__bio">{bio}</p>
-            <div className="member-header__links">
+          <header className="category-header">
+            {avatarSrc && (
+              <div className="category-header__avatar">
+                <img
+                  src={avatarSrc}
+                  alt={name}
+                  width={100}
+                  height={100}
+                  className="category-header__avatar-img"
+                />
+              </div>
+            )}
+            <h1 className="category-header__name">{name}</h1>
+            {bio && <p className="category-header__bio">{bio}</p>}
+            <div className="category-header__links">
               {twitterUsername && (
                 <a
                   href={`https://twitter.com/${twitterUsername}`}
-                  className="member-header__link"
+                  className="category-header__link"
                 >
                   <FaTwitter
-                    className="member-header__link-icon"
+                    className="category-header__link-icon"
                     aria-label={`Follow @${twitterUsername} on Twitter`}
                   />
                 </a>
@@ -61,18 +63,18 @@ const Page: NextPage<Props> = (props) => {
               {githubUsername && (
                 <a
                   href={`https://github.com/${githubUsername}`}
-                  className="member-header__link"
+                  className="category-header__link"
                 >
                   <FaGithub
-                    className="member-header__link-icon"
+                    className="category-header__link-icon"
                     aria-label={`@${githubUsername} on GitHub`}
                   />
                 </a>
               )}
               {websiteUrl && (
-                <a href={websiteUrl} className="member-header__link">
+                <a href={websiteUrl} className="category-header__link">
                   <AiOutlineLink
-                    className="member-header__link-icon"
+                    className="category-header__link-icon"
                     aria-label={`Link to website`}
                   />
                 </a>
@@ -80,8 +82,8 @@ const Page: NextPage<Props> = (props) => {
             </div>
           </header>
 
-          <div className="member-posts-container">
-            <PostList items={props.postItems} />
+          <div className="category-posts-container">
+            <PostList items={postItems} />
           </div>
         </ContentWrapper>
       </section>
@@ -91,28 +93,24 @@ const Page: NextPage<Props> = (props) => {
 
 export const getStaticProps: GetStaticProps<Props> = async ({ params }) => {
   const id = params?.id as string;
-  const member = getMemberById(id);
-  const postItems = getMemberPostsById(id);
+  const category = getCategoryById(id);
+  const postItems = getCategoryPostsById(id);
 
-  if (!member) throw "User not found";
+  if (!category) throw "Category not found";
 
   return {
     props: {
-      member,
+      category,
       postItems,
     },
   };
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const memberNameList = members.map((member) => encodeURIComponent(member.id));
-  const paths = memberNameList.map((id) => {
-    return {
-      params: {
-        id,
-      },
-    };
-  });
+  const paths = categories.map((category) => ({
+    params: { id: encodeURIComponent(category.id) },
+  }));
+
   return {
     paths,
     fallback: false,

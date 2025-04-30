@@ -1,57 +1,51 @@
 import { useState } from "react";
-import Link from "next/link";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-
 import { PostItem } from "@src/types";
-import {
-  getFaviconSrcFromOrigin,
-  getMemberPath,
-  getMemberById,
-} from "@src/utils/helper";
 
 dayjs.extend(relativeTime);
 
-const PostLink: React.FC<{ item: PostItem }> = (props) => {
-  const { authorId, title, isoDate, link, dateMiliSeconds } = props.item;
-  const member = getMemberById(authorId);
-  if (!member) return null;
+import Link from "next/link";
 
-  const { hostname, origin } = new URL(link);
+dayjs.extend(relativeTime);
 
-  return (
-    <article className="post-link">
-      <Link href={getMemberPath(member.id)} passHref>
-        <a className="post-link__author">
+const PostLink: React.FC<{ item: PostItem }> = ({ item }) => {
+  const { title, isoDate, link, imageUrl, authorName, dateMiliSeconds, categoryId } = item;
+  const isQiita = link.includes("qiita.com");
+  const ogpImage = isQiita ? "/qiita-icon.png" : imageUrl;
+
+  if (isQiita) {
+    return (
+      <a href={link} className="post-link" target="_blank" rel="noopener noreferrer">
+        <div className="post-link__author">
           <img
-            src={member.avatarSrc}
+            src={ogpImage}
             className="post-link__author-img"
             width={35}
             height={35}
-            alt={member.name}
+            alt="Qiita"
           />
           <div className="post-link__author-name">
-            <div className="post-link__author-name">{member.name}</div>
+            <div className="post-link__author-name">{authorName}</div>
             <time dateTime={isoDate} className="post-link__date">
               {dayjs(isoDate).fromNow()}
             </time>
           </div>
-        </a>
-      </Link>
-      <a href={link} className="post-link__main-link">
-        <h2 className="post-link__title">{title}</h2>
-        {hostname && (
-          <div className="post-link__site">
-            <img
-              src={getFaviconSrcFromOrigin(origin)}
-              width={14}
-              height={14}
-              className="post-link__site-favicon"
-              alt={hostname}
-            />
-            {hostname}
-          </div>
+        </div>
+        <div className="post-link__main-link">
+          <h2 className="post-link__title">{title}</h2>
+        </div>
+        {dateMiliSeconds && dateMiliSeconds > Date.now() - 86400000 * 3 && (
+          <div className="post-link__new-label">NEW</div>
         )}
+      </a>
+    );
+  }
+
+  return (
+    <article className="post-link">
+      <a href={link} className="post-link__main-link" target="_blank" rel="noopener noreferrer">
+        <img src={ogpImage} alt={title} className="post-image" />
       </a>
       {dateMiliSeconds && dateMiliSeconds > Date.now() - 86400000 * 3 && (
         <div className="post-link__new-label">NEW</div>
@@ -60,9 +54,11 @@ const PostLink: React.FC<{ item: PostItem }> = (props) => {
   );
 };
 
-export const PostList: React.FC<{ items: PostItem[] }> = (props) => {
+
+
+export const PostList: React.FC<{ items: PostItem[] }> = ({ items }) => {
   const [displayItemsCount, setDisplayItemsCount] = useState<number>(32);
-  const totalItemsCount = props.items?.length || 0;
+  const totalItemsCount = items?.length || 0;
   const canLoadMore = totalItemsCount - displayItemsCount > 0;
 
   if (!totalItemsCount) {
@@ -72,7 +68,7 @@ export const PostList: React.FC<{ items: PostItem[] }> = (props) => {
   return (
     <>
       <div className="post-list">
-        {props.items.slice(0, displayItemsCount).map((item, i) => (
+        {items.slice(0, displayItemsCount).map((item, i) => (
           <PostLink key={`post-item-${i}`} item={item} />
         ))}
       </div>

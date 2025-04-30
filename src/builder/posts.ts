@@ -1,7 +1,7 @@
 import fs from "fs-extra";
 import Parser from "rss-parser";
-import { members } from "../../members";
-import { PostItem, Member } from "../types";
+import { categories } from "../../categories";
+import { PostItem, Category } from "../types";
 
 type FeedItem = {
   title: string;
@@ -9,6 +9,8 @@ type FeedItem = {
   contentSnippet?: string;
   isoDate?: string;
   dateMiliSeconds: number;
+  imageUrl?: string;
+  authorName?: string;
 };
 
 function isValidUrl(str: string): boolean {
@@ -20,27 +22,67 @@ function isValidUrl(str: string): boolean {
   }
 }
 
-const parser = new Parser();
+const parser = new Parser({
+  customFields: {
+    item: [["enclosure", "url"], ["author", "name"]],
+  },
+});
 let allPostItems: PostItem[] = [];
 
 async function fetchFeedItems(url: string) {
   const feed = await parser.parseURL(url);
   if (!feed?.items?.length) return [];
 
-  // return item which has title and link
   return feed.items
-    .map(({ title, contentSnippet, link, isoDate }) => {
-      return {
-        title,
-        contentSnippet: contentSnippet?.replace(/\n/g, ""),
-        link,
-        isoDate,
-        dateMiliSeconds: isoDate ? new Date(isoDate).getTime() : 0,
-      };
-    })
+  .map(({ title, contentSnippet, link, isoDate, enclosure, author }) => {
+    const isQiita = link?.includes("qiita.com");
+  
+    return {
+      title,
+      contentSnippet: contentSnippet?.replace(/\n/g, ""),
+      link,
+      isoDate,
+      dateMiliSeconds: isoDate ? new Date(isoDate).getTime() : 0,
+      imageUrl: enclosure?.url,
+      authorName: isQiita ? author : undefined,
+    };
+  })
+  
     .filter(
-      ({ title, link }) => title && link && isValidUrl(link)
+      ({ title, link }) => title && link && isValidUrl(link),
     ) as FeedItem[];
+}
+
+
+async function getCategoryFeedItems(category: Category): Promise<PostItem[]> {
+  const { id, name, sources, includeUrlRegex, excludeUrlRegex } = category;
+  const feedItems = await getFeedItemsFromSources(sources);
+  if (!feedItems) return [];
+
+  let postItems = feedItems.map((item) => {
+    return {
+      ...item,
+      categoryName: name,
+      categoryId: id,
+    };
+  });
+
+  if (Array.isArray(includeUrlRegex)) {
+    postItems = postItems.filter((item) =>
+      includeUrlRegex.some((pattern) => item.link.match(new RegExp(pattern))),
+    );
+  }
+
+  if (Array.isArray(excludeUrlRegex)) {
+    postItems = postItems.filter(
+      (item) =>
+        !excludeUrlRegex.some((pattern) =>
+          item.link.match(new RegExp(pattern)),
+        ),
+    );
+  }
+
+  return postItems;
 }
 
 async function getFeedItemsFromSources(sources: undefined | string[]) {
@@ -53,37 +95,9 @@ async function getFeedItemsFromSources(sources: undefined | string[]) {
   return feedItems;
 }
 
-async function getMemberFeedItems(member: Member): Promise<PostItem[]> {
-  const { id, sources, name, includeUrlRegex, excludeUrlRegex } = member;
-  const feedItems = await getFeedItemsFromSources(sources);
-  if (!feedItems) return [];
-
-  let postItems = feedItems.map((item) => {
-    return {
-      ...item,
-      authorName: name,
-      authorId: id,
-    };
-  });
-  // remove items which not matches includeUrlRegex
-  if (includeUrlRegex) {
-    postItems = postItems.filter((item) => {
-      return item.link.match(new RegExp(includeUrlRegex));
-    });
-  }
-  // remove items which matches excludeUrlRegex
-  if (excludeUrlRegex) {
-    postItems = postItems.filter((item) => {
-      return !item.link.match(new RegExp(excludeUrlRegex));
-    });
-  }
-
-  return postItems;
-}
-
 (async function () {
-  for (const member of members) {
-    const items = await getMemberFeedItems(member);
+  for (const category of categories) {
+    const items = await getCategoryFeedItems(category);
     if (items) allPostItems = [...allPostItems, ...items];
   }
   allPostItems.sort((a, b) => b.dateMiliSeconds - a.dateMiliSeconds);

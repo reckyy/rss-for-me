@@ -4,7 +4,7 @@ import Link from "next/link";
 import posts from "@.contents/posts.json";
 import { config } from "@site.config";
 import { PostItem } from "@src/types";
-import { ScrollableMembers } from "@src/components/ScrollableMembers";
+import { ScrollableCategories } from "@src/components/ScrollableCategories";
 import { PostList } from "@src/components/PostList";
 import { PageSEO } from "@src/components/PageSEO";
 import {
@@ -13,6 +13,10 @@ import {
 } from "@src/components/ContentWrapper";
 
 const Page: NextPage = () => {
+  const trendPosts = (posts as PostItem[]).filter(
+    (post) => post.categoryId === "trend",
+  );
+
   return (
     <>
       <PageSEO
@@ -24,27 +28,22 @@ const Page: NextPage = () => {
 
       <section className="home-hero">
         <ContentWrapper>
-          <h1 className="home-hero__title">{config.siteMeta.title}</h1>
-          {!!config.siteMeta.description && (
-            <p className="home-hero__description">
-              {config.siteMeta.description}
-            </p>
-          )}
+          <h1 className="home-hero__title">RSS for me</h1>
         </ContentWrapper>
       </section>
 
       <section className="home-members">
         <ContentWrapper>
           <div className="home-section-title-container">
-            <h2 className="home-section-title">Members</h2>
-            <Link href="/members">
+            <h2 className="home-section-title">Categories</h2>
+            <Link href="/categories">
               <a className="home-section-link">See Details →</a>
             </Link>
           </div>
 
           <div className="home-members-container">
             <UndoWrapForScroll>
-              <ScrollableMembers />
+              <ScrollableCategories />
             </UndoWrapForScroll>
           </div>
         </ContentWrapper>
@@ -53,11 +52,11 @@ const Page: NextPage = () => {
       <section className="home-posts">
         <ContentWrapper>
           <div className="home-section-title-container">
-            <h2 className="home-section-title">Articles</h2>
+            <h2 className="home-section-title">Trending Articles</h2>
           </div>
 
           <div className="home-posts-container">
-            <PostList items={posts as PostItem[]} />
+            <PostList items={trendPosts} />
           </div>
         </ContentWrapper>
       </section>

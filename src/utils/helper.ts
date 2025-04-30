@@ -1,22 +1,17 @@
 import { PostItem } from "@src/types";
-import { members } from "@members";
+import { categories } from "@categories";
+import { Category } from "@src/types";
 import posts from "@.contents/posts.json";
 
-export function getMemberByName(name: string) {
-  return members.find((member) => member.name === name);
+export function getCategoryById(id: string): Category | undefined {
+  return categories.find((c) => c.id === id);
 }
 
-export function getMemberById(id: string) {
-  return members.find((member) => member.id === id);
+export function getCategoryPostsById(id: string): PostItem[] {
+  const posts = require("../../.contents/posts.json") as PostItem[];
+  return posts.filter((post) => post.categoryId === id);
 }
 
-export function getMemberPostsById(id: string) {
-  return (posts as PostItem[]).filter((item) => item.authorId === id);
-}
-
-export function getFaviconSrcFromOrigin(hostname: string) {
-  return `https://www.google.com/s2/favicons?sz=32&domain_url=${hostname}`;
-}
-export function getMemberPath(id: string) {
-  return `/members/${encodeURIComponent(id)}`;
+export function getCategoryPath(id: string) {
+  return `/categories/${encodeURIComponent(id)}`;
 }

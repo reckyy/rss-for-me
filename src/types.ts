@@ -1,23 +1,24 @@
-export type Member = {
+export type Category = {
   id: string;
   name: string;
-  avatarSrc: string;
-  role?: string;
   bio?: string;
-  sources?: string[];
-  includeUrlRegex?: string;
+  sources: string[];
+  avatarSrc?: string;
+  includeUrlRegex?: string[];
   excludeUrlRegex?: string;
-  githubUsername?: string;
   twitterUsername?: string;
+  githubUsername?: string;
   websiteUrl?: string;
 };
 
 export type PostItem = {
-  authorId: string;
-  authorName: string;
   title: string;
+  authorName?: string;
   link: string;
   contentSnippet?: string;
   isoDate?: string;
   dateMiliSeconds: number;
+  imageUrl?: string;
+  categoryId?: string;
+  categoryName?: string;
 };
