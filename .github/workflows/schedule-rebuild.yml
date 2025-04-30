@@ -1,0 +1,19 @@
+name: Scheduled Rebuild
+
+on:
+  schedule:
+    - cron: '0 0 * * 1' # 毎週月曜 00:00 UTC（日本時間 月曜09:00）
+  workflow_dispatch:
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel Deploy
+        run: |
+          git config --global user.name "vercel-bot"
+          git config --global user.email "vercel@bot.com"
+          git clone https://github.com/reckyy/rss-for-me.git
+          cd rss-for-me
+          git commit --allow-empty -m "chore: trigger rebuild"
+          git push
